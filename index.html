@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QLKS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="room-list-container">
+            <h2>Danh Sách Phòng</h2>
+            <div id="room-list"></div>
+            
+            <hr class="section-divider">
+
+            <div class="stats-container">
+                <h2>Báo Cáo & Thống Kê</h2>
+                
+                <div class="tabs">
+                    <button class="tab-link active" data-tab="daily">Theo Ngày</button>
+                    <button class="tab-link" data-tab="monthly">Theo Tháng</button>
+                    <button class="tab-link" data-tab="yearly">Theo Năm</button>
+                </div>
+
+                <div id="daily" class="tab-content active">
+                    <label for="stats-date">Chọn ngày:</label>
+                    <input type="date" id="stats-date">
+                </div>
+                <div id="monthly" class="tab-content">
+                    <label for="stats-month">Chọn tháng:</label>
+                    <input type="month" id="stats-month">
+                </div>
+                <div id="yearly" class="tab-content">
+                    <label for="stats-year">Chọn năm:</label>
+                    <input type="number" id="stats-year" placeholder="Nhập năm (ví dụ: 2024)">
+                </div>
+                
+                <div class="stats-results">
+                    <p><strong>Tổng doanh thu:</strong> <span id="total-revenue">0</span> VNĐ</p>
+                    <p><strong>Lượt thuê theo ngày:</strong> <span id="daily-checkouts">0</span></p>
+                    <p><strong>Lượt thuê qua đêm:</strong> <span id="overnight-checkouts">0</span></p>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+
+                <div class="backup-restore">
+                    <button id="export-data-btn">💾 Sao lưu Dữ liệu</button>
+                    <button id="import-data-btn">📂 Phục hồi Dữ liệu</button>
+                    <input type="file" id="import-file-input" style="display: none;" accept=".json">
+                </div>
+            </div>
+        </div>
+
+        <div class="room-details-container">
+            <h2 id="room-title">Chọn một phòng để xem chi tiết</h2>
+            <div id="details-content">
+                <p><strong>Trạng thái:</strong> <span id="room-status">-</span></p>
+                <p><strong>Sử dụng điều hòa:</strong> <span id="ac-status">-</span></p>
+                <p><strong>Giờ vào:</strong> <span id="checkin-time">-</span></p>
+                <p><strong>Hình thức thuê:</strong> <span id="stay-type">-</span></p>
+                <div class="controls">
+                    <button id="checkin-btn" disabled>Check-in</button>
+                    <button id="checkout-btn" disabled>Check-out</button>
+                </div>
+                <div class="services">
+                    <h3>Thêm Dịch vụ & Tiện ích</h3>
+                    <button id="toggle-ac-btn" disabled>Bật Điều hòa</button>
+                    <div id="service-buttons">
+                        <button id="add-water-btn" disabled>Thêm Nước suối (10,000)</button>
+                        <button id="add-redbull-btn" disabled>Thêm Redbull (20,000)</button>
+                    </div>
+                    <h4>Danh sách dịch vụ đã dùng:</h4>
+                    <ul id="service-list"></ul>
+                </div>
+                <div class="billing">
+                    <h3>Thanh Toán</h3>
+                    <p><strong>Tổng tiền tạm tính:</strong> <span id="total-bill">0</span> VNĐ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkin-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Check-in cho Phòng <span id="modal-room-id"></span></h3>
+            <label for="stay-type-select">Chọn hình thức thuê:</label>
+            <select id="stay-type-select">
+                <option value="hourly">Theo Giờ</option>
+                <option value="overnight">Qua Đêm</option>
+                <option value="daily">Theo Ngày</option>
+            </select>
+            <div class="ac-option">
+                <input type="checkbox" id="ac-checkbox">
+                <label for="ac-checkbox">Sử dụng điều hòa</label>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirm-checkin-btn">Xác nhận Check-in</button>
+                <button id="cancel-checkin-btn">Hủy</button>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

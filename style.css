@@ -1,0 +1,114 @@
+/* --- Cài đặt chung --- */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21;
+}
+.app-container {
+    display: flex; max-width: 1400px; height: 95vh; margin: 0 auto;
+    background: #fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1); overflow: hidden;
+}
+
+/* --- Cột danh sách phòng & Thống kê --- */
+.room-list-container {
+    width: 45%; border-right: 1px solid #dddfe2; padding: 20px; overflow-y: auto;
+}
+#room-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;
+}
+.room {
+    padding: 20px 15px; border-radius: 8px; text-align: center; cursor: pointer;
+    font-weight: bold; transition: all 0.2s ease-in-out; border: 1px solid transparent;
+    position: relative;
+}
+.room:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.room.selected { border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,.25); }
+.room.available { background-color: #e7f3ff; color: #0056b3; }
+.room.occupied { background-color: #fff4e5; color: #a05e03; font-style: italic; }
+.ac-icon {
+    position: absolute; top: 5px; right: 5px; font-size: 14px;
+    background-color: #fff; border-radius: 50%; width: 22px; height: 22px;
+    line-height: 22px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* --- Khu vực thống kê NÂNG CAO --- */
+.section-divider { border: none; border-top: 2px solid #f0f2f5; margin: 25px 0; }
+.tabs { display: flex; border-bottom: 2px solid #dddfe2; margin-bottom: 15px; }
+.tab-link {
+    background: none; border: none; padding: 10px 15px; cursor: pointer;
+    font-size: 16px; font-weight: 600; color: #606770; position: relative;
+}
+.tab-link.active { color: #007bff; border-bottom: 3px solid #007bff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.stats-container input {
+    width: 100%; padding: 10px; border: 1px solid #dddfe2; border-radius: 6px;
+    font-size: 16px; box-sizing: border-box; margin-top: 5px;
+}
+.stats-results {
+    margin-top: 15px; background-color: #f7f8fa; padding: 15px; border-radius: 8px;
+    border: 1px solid #dddfe2;
+}
+.stats-results p { margin: 8px 0; font-size: 16px; }
+.chart-container { margin-top: 20px; }
+.backup-restore {
+    margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
+}
+.backup-restore button { width: 100%; margin: 0; }
+#import-data-btn { background-color: #6c757d; }
+
+/* --- Cột chi tiết --- */
+.room-details-container { width: 55%; padding: 20px 30px; overflow-y: auto; }
+.room-details-container h2, .room-details-container h3 {
+    border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-bottom: 15px;
+}
+p { line-height: 1.8; }
+button {
+    background-color: #007bff; color: white; border: none; padding: 12px 18px;
+    border-radius: 6px; cursor: pointer; margin: 5px; font-size: 16px;
+    transition: background-color 0.2s;
+}
+button:hover:not(:disabled) { background-color: #0056b3; }
+button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
+#checkout-btn { background-color: #dc3545; }
+#checkout-btn:hover:not(:disabled) { background-color: #c82333; }
+.services #service-buttons { display: flex; justify-content: space-between; }
+.services #service-buttons button { background-color: #28a745; width: calc(50% - 10px); }
+.services #service-buttons button:hover:not(:disabled) { background-color: #218838; }
+
+/* --- PHẦN MỚI: Định dạng nút Điều hòa --- */
+#toggle-ac-btn {
+    width: 100%;
+    margin-bottom: 10px;
+    background-color: #17a2b8; /* Màu xanh ngọc */
+}
+#toggle-ac-btn.active {
+    background-color: #fd7e14; /* Màu cam khi đang bật */
+}
+#toggle-ac-btn:hover:not(:disabled) {
+    background-color: #138496;
+}
+#toggle-ac-btn.active:hover:not(:disabled) {
+    background-color: #e36a02;
+}
+
+
+#service-list { list-style-type: decimal; padding-left: 20px; }
+#service-list li { background: #f0f2f5; padding: 8px 12px; margin-top: 5px; border-radius: 4px; }
+
+/* --- Modal Styles --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); display: flex; align-items: center;
+    justify-content: center; z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 30px; border-radius: 8px; width: 90%;
+    max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.modal-content h3 { margin-top: 0; }
+.modal-content select, .modal-content label { display: block; width: 100%; margin-bottom: 10px; }
+.modal-content select { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #dddfe2; }
+.ac-option { margin-top: 20px; display: flex; align-items: center; font-size: 16px; }
+.ac-option input { margin-right: 10px; width: 18px; height: 18px;}
+.modal-buttons { margin-top: 20px; text-align: right; }
+.modal-buttons button#cancel-checkin-btn { background-color: #6c757d; }
