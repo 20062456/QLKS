@@ -74,24 +74,12 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 .services #service-buttons { display: flex; justify-content: space-between; }
 .services #service-buttons button { background-color: #28a745; width: calc(50% - 10px); }
 .services #service-buttons button:hover:not(:disabled) { background-color: #218838; }
-
-/* --- PHẦN MỚI: Định dạng nút Điều hòa --- */
 #toggle-ac-btn {
-    width: 100%;
-    margin-bottom: 10px;
-    background-color: #17a2b8; /* Màu xanh ngọc */
+    width: 100%; margin-bottom: 10px; background-color: #17a2b8;
 }
-#toggle-ac-btn.active {
-    background-color: #fd7e14; /* Màu cam khi đang bật */
-}
-#toggle-ac-btn:hover:not(:disabled) {
-    background-color: #138496;
-}
-#toggle-ac-btn.active:hover:not(:disabled) {
-    background-color: #e36a02;
-}
-
-
+#toggle-ac-btn.active { background-color: #fd7e14; }
+#toggle-ac-btn:hover:not(:disabled) { background-color: #138496; }
+#toggle-ac-btn.active:hover:not(:disabled) { background-color: #e36a02; }
 #service-list { list-style-type: decimal; padding-left: 20px; }
 #service-list li { background: #f0f2f5; padding: 8px 12px; margin-top: 5px; border-radius: 4px; }
 
@@ -112,3 +100,50 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 .ac-option input { margin-right: 10px; width: 18px; height: 18px;}
 .modal-buttons { margin-top: 20px; text-align: right; }
 .modal-buttons button#cancel-checkin-btn { background-color: #6c757d; }
+
+/******************************************/
+/* --- PHẦN MỚI: Giao diện cho Mobile --- */
+/******************************************/
+@media (max-width: 768px) {
+    body {
+        padding: 5px; /* Giảm padding trên màn hình nhỏ */
+    }
+
+    .app-container {
+        flex-direction: column; /* Xếp 2 cột chồng lên nhau */
+        height: auto; /* Chiều cao tự động để có thể cuộn */
+        overflow-y: auto;
+    }
+
+    .room-list-container,
+    .room-details-container {
+        width: 100%; /* Mỗi cột chiếm toàn bộ chiều rộng */
+        box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
+        border-right: none; /* Bỏ đường kẻ phải */
+        border-bottom: 2px solid #dddfe2; /* Thêm đường kẻ dưới để phân tách */
+        overflow-y: visible; /* Cho phép nội dung tự giãn ra */
+        padding: 15px;
+    }
+    
+    #room-list {
+        /* Cho phép các ô phòng nhỏ hơn một chút */
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        gap: 10px;
+    }
+
+    .room {
+        padding: 15px 10px;
+    }
+
+    .tabs {
+        justify-content: space-around;
+    }
+    .tab-link {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    .backup-restore {
+        flex-direction: row; /* Đặt 2 nút Sao lưu/Phục hồi trên cùng 1 hàng */
+    }
+}
