@@ -71,8 +71,8 @@ button:hover:not(:disabled) { background-color: #0056b3; }
 button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 #checkout-btn { background-color: #dc3545; }
 #checkout-btn:hover:not(:disabled) { background-color: #c82333; }
-.services #service-buttons { display: flex; justify-content: space-between; }
-.services #service-buttons button { background-color: #28a745; width: calc(50% - 10px); }
+.services #service-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.services #service-buttons button { background-color: #28a745; width: calc(50% - 5px); }
 .services #service-buttons button:hover:not(:disabled) { background-color: #218838; }
 #toggle-ac-btn {
     width: 100%; margin-bottom: 10px; background-color: #17a2b8;
@@ -100,6 +100,94 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 .ac-option input { margin-right: 10px; width: 18px; height: 18px;}
 .modal-buttons { margin-top: 20px; text-align: right; }
 .modal-buttons button#cancel-checkin-btn { background-color: #6c757d; }
+
+.pricing-management {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid #f0f2f5;
+}
+.pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.pricing-card {
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fafbfc;
+}
+.pricing-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.pricing-card label,
+.drink-form label,
+.drink-pricing-item label {
+    display: block;
+    font-size: 14px;
+    margin-top: 8px;
+}
+.pricing-card input,
+.drink-form input,
+.drink-pricing-item input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+}
+.drink-pricing-list {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.drink-pricing-item {
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fafbfc;
+}
+.drink-pricing-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+.drink-pricing-item .remove-drink-btn {
+    background-color: #dc3545;
+    margin: 0;
+}
+.drink-pricing-item .remove-drink-btn:hover:not(:disabled) {
+    background-color: #c82333;
+}
+.drink-form {
+    margin-top: 10px;
+    border: 1px dashed #dddfe2;
+    padding: 10px;
+    border-radius: 8px;
+}
+.drink-form button {
+    margin-top: 10px;
+    width: 100%;
+}
+.pricing-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+.pricing-actions button {
+    flex: 1;
+    margin: 0;
+}
+#reset-pricing-btn {
+    background-color: #6c757d;
+}
+#reset-pricing-btn:hover:not(:disabled) {
+    background-color: #5a6268;
+}
 
 /******************************************/
 /* --- PHẦN MỚI: Giao diện cho Mobile --- */
@@ -145,5 +233,14 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     
     .backup-restore {
         flex-direction: row; /* Đặt 2 nút Sao lưu/Phục hồi trên cùng 1 hàng */
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+    .pricing-actions {
+        flex-direction: column;
+    }
+    .drink-pricing-row {
+        grid-template-columns: 1fr;
     }
 }
