@@ -101,6 +101,60 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 .modal-buttons { margin-top: 20px; text-align: right; }
 .modal-buttons button#cancel-checkin-btn { background-color: #6c757d; }
 
+.pricing-management {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid #f0f2f5;
+}
+.pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.pricing-card {
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fafbfc;
+}
+.pricing-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.pricing-card label,
+.drink-pricing label {
+    display: block;
+    font-size: 14px;
+    margin-top: 8px;
+}
+.pricing-card input,
+.drink-pricing input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+}
+.drink-pricing {
+    margin-top: 8px;
+}
+.pricing-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+.pricing-actions button {
+    flex: 1;
+    margin: 0;
+}
+#reset-pricing-btn {
+    background-color: #6c757d;
+}
+#reset-pricing-btn:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
 /******************************************/
 /* --- PHẦN MỚI: Giao diện cho Mobile --- */
 /******************************************/
@@ -145,5 +199,11 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     
     .backup-restore {
         flex-direction: row; /* Đặt 2 nút Sao lưu/Phục hồi trên cùng 1 hàng */
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+    .pricing-actions {
+        flex-direction: column;
     }
 }

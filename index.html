@@ -80,6 +80,44 @@
                     <h3>Thanh Toán</h3>
                     <p><strong>Tổng tiền tạm tính:</strong> <span id="total-bill">0</span> VNĐ</p>
                 </div>
+                <div class="pricing-management">
+                    <h3>Cập nhật Bảng giá</h3>
+                    <div class="pricing-grid">
+                        <div class="pricing-card">
+                            <h4>Phòng có điều hòa</h4>
+                            <label>Giờ đầu</label>
+                            <input type="number" id="ac-hourly-first" min="0" step="1000">
+                            <label>Giờ tiếp theo</label>
+                            <input type="number" id="ac-hourly-next" min="0" step="1000">
+                            <label>Qua đêm</label>
+                            <input type="number" id="ac-overnight" min="0" step="1000">
+                            <label>Theo ngày</label>
+                            <input type="number" id="ac-daily" min="0" step="1000">
+                        </div>
+                        <div class="pricing-card">
+                            <h4>Phòng không điều hòa</h4>
+                            <label>Giờ đầu</label>
+                            <input type="number" id="noac-hourly-first" min="0" step="1000">
+                            <label>Giờ tiếp theo</label>
+                            <input type="number" id="noac-hourly-next" min="0" step="1000">
+                            <label>Qua đêm</label>
+                            <input type="number" id="noac-overnight" min="0" step="1000">
+                            <label>Theo ngày</label>
+                            <input type="number" id="noac-daily" min="0" step="1000">
+                        </div>
+                    </div>
+                    <h4>Giá đồ uống</h4>
+                    <div class="drink-pricing">
+                        <label for="water-price-input">Nước suối</label>
+                        <input type="number" id="water-price-input" min="0" step="1000">
+                        <label for="redbull-price-input">Redbull</label>
+                        <input type="number" id="redbull-price-input" min="0" step="1000">
+                    </div>
+                    <div class="pricing-actions">
+                        <button id="save-pricing-btn">Lưu bảng giá</button>
+                        <button id="reset-pricing-btn">Khôi phục mặc định</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
