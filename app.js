@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'water', name: 'Nước suối', price: 10000 },
         { id: 'redbull', name: 'Redbull', price: 20000 }
     ];
-    const MIN_SERVICE_COUNT = 1;
+    const MIN_DRINK_COUNT = 1;
+    const MIN_DRINK_WARNING = `Cần giữ ít nhất ${MIN_DRINK_COUNT} đồ uống.`;
 
     function loadData(key, defaultValue) {
         const savedData = localStorage.getItem(key);
@@ -560,8 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!removeBtn) return;
         const index = Number(removeBtn.dataset.index);
         if (!Number.isInteger(index) || index < 0 || index >= services.length) return;
-        if (services.length <= MIN_SERVICE_COUNT) {
-            alert(`Cần giữ ít nhất ${MIN_SERVICE_COUNT} đồ uống.`);
+        if (services.length <= MIN_DRINK_COUNT) {
+            alert(MIN_DRINK_WARNING);
             return;
         }
         services = services.filter((_, i) => i !== index);
