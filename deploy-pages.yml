@@ -1,0 +1,12 @@
+serviceButtonsContainer.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-service-id]');
+  const selectedService = services.find(item => item.id === button?.dataset.serviceId);
+  if (!selectedService || !selectedRoomId) return;
+
+  roomsData[selectedRoomId].services.push({
+    name: selectedService.name,
+    price: selectedService.price
+  });
+  saveData('hotelRoomsData', roomsData);
+  displayRoomDetails(selectedRoomId);
+});
