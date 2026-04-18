@@ -17,28 +17,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveData(key, data) {
         localStorage.setItem(key, JSON.stringify(data));
     }
-    function toNonNegativeNumber(value, fallback = 0) {
+    function parseNonNegativeNumber(value, fallback = 0) {
         const parsed = Number(value);
         return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    }
+    function isValidService(service) {
+        const price = Number(service?.price);
+        return typeof service?.name === 'string' && service.name.trim() !== '' && Number.isFinite(price) && price >= 0;
     }
     function normalizePricing(rawPricing) {
         const source = rawPricing || {};
         return {
             ac: {
                 hourly: {
-                    firstHour: toNonNegativeNumber(source.ac?.hourly?.firstHour, defaultPricing.ac.hourly.firstHour),
-                    nextHour: toNonNegativeNumber(source.ac?.hourly?.nextHour, defaultPricing.ac.hourly.nextHour)
+                    firstHour: parseNonNegativeNumber(source.ac?.hourly?.firstHour, defaultPricing.ac.hourly.firstHour),
+                    nextHour: parseNonNegativeNumber(source.ac?.hourly?.nextHour, defaultPricing.ac.hourly.nextHour)
                 },
-                overnight: toNonNegativeNumber(source.ac?.overnight, defaultPricing.ac.overnight),
-                daily: toNonNegativeNumber(source.ac?.daily, defaultPricing.ac.daily)
+                overnight: parseNonNegativeNumber(source.ac?.overnight, defaultPricing.ac.overnight),
+                daily: parseNonNegativeNumber(source.ac?.daily, defaultPricing.ac.daily)
             },
             no_ac: {
                 hourly: {
-                    firstHour: toNonNegativeNumber(source.no_ac?.hourly?.firstHour, defaultPricing.no_ac.hourly.firstHour),
-                    nextHour: toNonNegativeNumber(source.no_ac?.hourly?.nextHour, defaultPricing.no_ac.hourly.nextHour)
+                    firstHour: parseNonNegativeNumber(source.no_ac?.hourly?.firstHour, defaultPricing.no_ac.hourly.firstHour),
+                    nextHour: parseNonNegativeNumber(source.no_ac?.hourly?.nextHour, defaultPricing.no_ac.hourly.nextHour)
                 },
-                overnight: toNonNegativeNumber(source.no_ac?.overnight, defaultPricing.no_ac.overnight),
-                daily: toNonNegativeNumber(source.no_ac?.daily, defaultPricing.no_ac.daily)
+                overnight: parseNonNegativeNumber(source.no_ac?.overnight, defaultPricing.no_ac.overnight),
+                daily: parseNonNegativeNumber(source.no_ac?.daily, defaultPricing.no_ac.daily)
             }
         };
     }
@@ -47,11 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             water: {
                 name: source.water?.name || defaultServices.water.name,
-                price: toNonNegativeNumber(source.water?.price, defaultServices.water.price)
+                price: parseNonNegativeNumber(source.water?.price, defaultServices.water.price)
             },
             redbull: {
                 name: source.redbull?.name || defaultServices.redbull.name,
-                price: toNonNegativeNumber(source.redbull?.price, defaultServices.redbull.price)
+                price: parseNonNegativeNumber(source.redbull?.price, defaultServices.redbull.price)
             }
         };
     }
@@ -158,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (room.services) {
             room.services.forEach(service => {
                 const li = document.createElement('li');
-                li.textContent = `${service.name} - ${toNonNegativeNumber(service.price).toLocaleString('vi-VN')} VNĐ`;
+                li.textContent = `${service.name} - ${parseNonNegativeNumber(service.price).toLocaleString('vi-VN')} VNĐ`;
                 serviceList.appendChild(li);
             });
         }
@@ -209,10 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             roomCost = roomPriceConfig.daily;
             roomCostDetails = `Theo ngày: ${roomCost.toLocaleString('vi-VN')} VNĐ`;
         }
-        const validServices = (room.services || []).filter(service => {
-            const price = Number(service?.price);
-            return typeof service?.name === 'string' && service.name.trim() !== '' && Number.isFinite(price) && price >= 0;
-        });
+        const validServices = (room.services || []).filter(isValidService);
         const serviceCost = validServices.reduce((total, service) => total + Number(service.price), 0);
         const serviceCounts = {};
         validServices.forEach(service => {
@@ -298,24 +299,24 @@ document.addEventListener('DOMContentLoaded', () => {
             pricing: {
                 ac: {
                     hourly: {
-                        firstHour: toNonNegativeNumber(acHourlyFirstInput.value),
-                        nextHour: toNonNegativeNumber(acHourlyNextInput.value)
+                        firstHour: parseNonNegativeNumber(acHourlyFirstInput.value),
+                        nextHour: parseNonNegativeNumber(acHourlyNextInput.value)
                     },
-                    overnight: toNonNegativeNumber(acOvernightInput.value),
-                    daily: toNonNegativeNumber(acDailyInput.value)
+                    overnight: parseNonNegativeNumber(acOvernightInput.value),
+                    daily: parseNonNegativeNumber(acDailyInput.value)
                 },
                 no_ac: {
                     hourly: {
-                        firstHour: toNonNegativeNumber(noAcHourlyFirstInput.value),
-                        nextHour: toNonNegativeNumber(noAcHourlyNextInput.value)
+                        firstHour: parseNonNegativeNumber(noAcHourlyFirstInput.value),
+                        nextHour: parseNonNegativeNumber(noAcHourlyNextInput.value)
                     },
-                    overnight: toNonNegativeNumber(noAcOvernightInput.value),
-                    daily: toNonNegativeNumber(noAcDailyInput.value)
+                    overnight: parseNonNegativeNumber(noAcOvernightInput.value),
+                    daily: parseNonNegativeNumber(noAcDailyInput.value)
                 }
             },
             services: {
-                water: { ...services.water, price: toNonNegativeNumber(waterPriceInput.value) },
-                redbull: { ...services.redbull, price: toNonNegativeNumber(redbullPriceInput.value) }
+                water: { ...services.water, price: parseNonNegativeNumber(waterPriceInput.value) },
+                redbull: { ...services.redbull, price: parseNonNegativeNumber(redbullPriceInput.value) }
             }
         };
     }
@@ -453,13 +454,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     addWaterBtn.addEventListener('click', () => {
         if (!selectedRoomId) return;
-        roomsData[selectedRoomId].services.push({ name: services.water.name, price: services.water.price });
+        roomsData[selectedRoomId].services.push({ ...services.water });
         saveData('hotelRoomsData', roomsData);
         displayRoomDetails(selectedRoomId);
     });
     addRedbullBtn.addEventListener('click', () => {
         if (!selectedRoomId) return;
-        roomsData[selectedRoomId].services.push({ name: services.redbull.name, price: services.redbull.price });
+        roomsData[selectedRoomId].services.push({ ...services.redbull });
         saveData('hotelRoomsData', roomsData);
         displayRoomDetails(selectedRoomId);
     });
