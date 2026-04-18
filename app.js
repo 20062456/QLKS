@@ -5,10 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ac: { hourly: { firstHour: 70000, nextHour: 20000 }, overnight: 220000, daily: 350000 },
         no_ac: { hourly: { firstHour: 60000, nextHour: 10000 }, overnight: 180000, daily: 280000 }
     };
-    const defaultServices = {
-        water: { name: 'Nước suối', price: 10000 },
-        redbull: { name: 'Redbull', price: 20000 }
-    };
+    const defaultServices = [
+        { id: 'water', name: 'Nước suối', price: 10000 },
+        { id: 'redbull', name: 'Redbull', price: 20000 }
+    ];
 
     function loadData(key, defaultValue) {
         const savedData = localStorage.getItem(key);
@@ -24,6 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function isValidService(service) {
         const price = Number(service?.price);
         return typeof service?.name === 'string' && service.name.trim() !== '' && Number.isFinite(price) && price >= 0;
+    }
+    function makeServiceId(name, index = 0) {
+        const base = (name || 'drink')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'drink';
+        return index > 0 ? `${base}-${index}` : base;
     }
     function normalizePricing(rawPricing) {
         const source = rawPricing || {};
@@ -47,17 +56,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     function normalizeServices(rawServices) {
-        const source = rawServices || {};
-        return {
-            water: {
-                name: source.water?.name || defaultServices.water.name,
-                price: parseNonNegativeNumber(source.water?.price, defaultServices.water.price)
-            },
-            redbull: {
-                name: source.redbull?.name || defaultServices.redbull.name,
-                price: parseNonNegativeNumber(source.redbull?.price, defaultServices.redbull.price)
-            }
-        };
+        const defaultList = defaultServices.map(item => ({ ...item }));
+        if (!rawServices) return defaultList;
+        const sourceList = Array.isArray(rawServices)
+            ? rawServices
+            : Object.entries(rawServices).map(([id, item]) => ({ id, ...(item || {}) }));
+        const usedIds = new Set();
+        const normalized = sourceList
+            .map((item, index) => {
+                const rawName = typeof item?.name === 'string' ? item.name.trim() : '';
+                const name = rawName || `Đồ uống ${index + 1}`;
+                let id = (typeof item?.id === 'string' ? item.id.trim() : '') || makeServiceId(name);
+                let suffix = 1;
+                while (usedIds.has(id)) {
+                    id = makeServiceId(name, suffix++);
+                }
+                usedIds.add(id);
+                return {
+                    id,
+                    name,
+                    price: parseNonNegativeNumber(item?.price, 0)
+                };
+            })
+            .filter(item => item.name !== '');
+        return normalized.length > 0 ? normalized : defaultList;
     }
     function initializeRooms() {
         let rooms = loadData('hotelRoomsData', null);
@@ -87,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalBill = document.getElementById('total-bill');
     const checkinBtn = document.getElementById('checkin-btn');
     const checkoutBtn = document.getElementById('checkout-btn');
-    const addWaterBtn = document.getElementById('add-water-btn');
-    const addRedbullBtn = document.getElementById('add-redbull-btn');
+    const serviceButtonsContainer = document.getElementById('service-buttons');
     const toggleAcBtn = document.getElementById('toggle-ac-btn'); // Nút mới
     const tabs = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -115,8 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const noAcHourlyNextInput = document.getElementById('noac-hourly-next');
     const noAcOvernightInput = document.getElementById('noac-overnight');
     const noAcDailyInput = document.getElementById('noac-daily');
-    const waterPriceInput = document.getElementById('water-price-input');
-    const redbullPriceInput = document.getElementById('redbull-price-input');
+    const drinkPricingList = document.getElementById('drink-pricing-list');
+    const newDrinkNameInput = document.getElementById('new-drink-name');
+    const newDrinkPriceInput = document.getElementById('new-drink-price');
+    const addDrinkBtn = document.getElementById('add-drink-btn');
     const savePricingBtn = document.getElementById('save-pricing-btn');
     const resetPricingBtn = document.getElementById('reset-pricing-btn');
 
@@ -139,6 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 roomDiv.appendChild(acIcon);
             }
             roomListContainer.appendChild(roomDiv);
+        });
+    }
+
+    function renderServiceButtons() {
+        serviceButtonsContainer.innerHTML = '';
+        services.forEach(service => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.dataset.serviceId = service.id;
+            btn.textContent = `Thêm ${service.name} (${parseNonNegativeNumber(service.price).toLocaleString('vi-VN')})`;
+            btn.disabled = !selectedRoomId || roomsData[selectedRoomId]?.status !== 'occupied';
+            serviceButtonsContainer.appendChild(btn);
         });
     }
 
@@ -174,8 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOccupied = room.status === 'occupied';
         checkinBtn.disabled = isOccupied;
         checkoutBtn.disabled = !isOccupied;
-        addWaterBtn.disabled = !isOccupied;
-        addRedbullBtn.disabled = !isOccupied;
+        serviceButtonsContainer.querySelectorAll('button').forEach(btn => { btn.disabled = !isOccupied; });
         toggleAcBtn.disabled = !isOccupied; // Cập nhật trạng thái nút mới
 
         if (isOccupied) {
@@ -290,8 +324,50 @@ document.addEventListener('DOMContentLoaded', () => {
         noAcHourlyNextInput.value = pricing.no_ac.hourly.nextHour;
         noAcOvernightInput.value = pricing.no_ac.overnight;
         noAcDailyInput.value = pricing.no_ac.daily;
-        waterPriceInput.value = services.water.price;
-        redbullPriceInput.value = services.redbull.price;
+        drinkPricingList.innerHTML = '';
+        services.forEach((service, index) => {
+            const item = document.createElement('div');
+            item.className = 'drink-pricing-item';
+            const row = document.createElement('div');
+            row.className = 'drink-pricing-row';
+
+            const nameWrap = document.createElement('div');
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = 'Tên đồ uống';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.dataset.field = 'name';
+            nameInput.dataset.index = index;
+            nameInput.value = service.name;
+            nameWrap.appendChild(nameLabel);
+            nameWrap.appendChild(nameInput);
+
+            const priceWrap = document.createElement('div');
+            const priceLabel = document.createElement('label');
+            priceLabel.textContent = 'Giá';
+            const priceInput = document.createElement('input');
+            priceInput.type = 'number';
+            priceInput.min = '0';
+            priceInput.step = '1000';
+            priceInput.dataset.field = 'price';
+            priceInput.dataset.index = index;
+            priceInput.value = service.price;
+            priceWrap.appendChild(priceLabel);
+            priceWrap.appendChild(priceInput);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-drink-btn';
+            removeBtn.dataset.index = index;
+            removeBtn.textContent = 'Xóa';
+
+            row.appendChild(nameWrap);
+            row.appendChild(priceWrap);
+            row.appendChild(removeBtn);
+            item.appendChild(row);
+            drinkPricingList.appendChild(item);
+        });
+        renderServiceButtons();
     }
 
     function buildPricingFromForm() {
@@ -314,10 +390,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     daily: parseNonNegativeNumber(noAcDailyInput.value)
                 }
             },
-            services: {
-                water: { ...services.water, price: parseNonNegativeNumber(waterPriceInput.value) },
-                redbull: { ...services.redbull, price: parseNonNegativeNumber(redbullPriceInput.value) }
-            }
+            services: Array.from(drinkPricingList.querySelectorAll('.drink-pricing-item')).map((item, index) => {
+                const nameInput = item.querySelector('input[data-field="name"]');
+                const priceInput = item.querySelector('input[data-field="price"]');
+                const original = services[index] || {};
+                return {
+                    id: original.id || makeServiceId(nameInput?.value, index),
+                    name: (nameInput?.value || '').trim(),
+                    price: parseNonNegativeNumber(priceInput?.value, 0)
+                };
+            }).filter(item => item.name !== '')
         };
     }
 
@@ -328,8 +410,27 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData('hotelPricingConfig', pricing);
         saveData('hotelServicesConfig', services);
         fillPricingForm();
+        renderServiceButtons();
         if (selectedRoomId) displayRoomDetails(selectedRoomId);
         alert('Đã cập nhật bảng giá thành công.');
+    }
+
+    function handleAddDrink() {
+        const name = (newDrinkNameInput.value || '').trim();
+        const price = parseNonNegativeNumber(newDrinkPriceInput.value, -1);
+        if (!name) {
+            alert('Vui lòng nhập tên đồ uống.');
+            return;
+        }
+        if (price < 0) {
+            alert('Vui lòng nhập giá đồ uống hợp lệ.');
+            return;
+        }
+        const nextServices = [...services, { id: makeServiceId(name, services.length), name, price }];
+        services = normalizeServices(nextServices);
+        newDrinkNameInput.value = '';
+        newDrinkPriceInput.value = '';
+        fillPricingForm();
     }
 
     function handleResetPricing() {
@@ -339,6 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData('hotelPricingConfig', pricing);
         saveData('hotelServicesConfig', services);
         fillPricingForm();
+        renderServiceButtons();
         if (selectedRoomId) displayRoomDetails(selectedRoomId);
         alert('Đã khôi phục bảng giá mặc định.');
     }
@@ -413,26 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- GÁN SỰ KIỆN ---
-
-    tabs.forEach(tab => tab.addEventListener('click', () => { /* ... */ })); // (giữ nguyên)
-    roomListContainer.addEventListener('click', e => { /* ... */ }); // (giữ nguyên)
-    checkinBtn.addEventListener('click', () => { /* ... */ }); // (giữ nguyên)
-    checkoutBtn.addEventListener('click', handleCheckOut);
-    addWaterBtn.addEventListener('click', () => { /* ... */ }); // (giữ nguyên)
-    addRedbullBtn.addEventListener('click', () => { /* ... */ }); // (giữ nguyên)
-    [statsDateInput, statsMonthInput, statsYearInput].forEach(input => input.addEventListener('change', updateStats));
-    exportBtn.addEventListener('click', () => { /* ... */ }); // (giữ nguyên)
-    importBtn.addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', (event) => { /* ... */ }); // (giữ nguyên)
-    confirmCheckinBtn.addEventListener('click', () => { /* ... */ }); // (giữ nguyên)
-    cancelCheckinBtn.addEventListener('click', () => checkinModal.style.display = 'none');
-    savePricingBtn.addEventListener('click', handleSavePricing);
-    resetPricingBtn.addEventListener('click', handleResetPricing);
-    
-    // Gán sự kiện cho nút mới
-    toggleAcBtn.addEventListener('click', handleToggleAC);
-    
-    // Copy lại các hàm và sự kiện đã rút gọn ở trên
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(item => item.classList.remove('active'));
@@ -452,18 +534,38 @@ document.addEventListener('DOMContentLoaded', () => {
         acCheckbox.checked = false;
         checkinModal.style.display = 'flex';
     });
-    addWaterBtn.addEventListener('click', () => {
-        if (!selectedRoomId) return;
-        roomsData[selectedRoomId].services.push({ ...services.water });
+    checkoutBtn.addEventListener('click', handleCheckOut);
+    toggleAcBtn.addEventListener('click', handleToggleAC);
+    [statsDateInput, statsMonthInput, statsYearInput].forEach(input => input.addEventListener('change', updateStats));
+    importBtn.addEventListener('click', () => importFileInput.click());
+    cancelCheckinBtn.addEventListener('click', () => checkinModal.style.display = 'none');
+    savePricingBtn.addEventListener('click', handleSavePricing);
+    resetPricingBtn.addEventListener('click', handleResetPricing);
+    addDrinkBtn.addEventListener('click', handleAddDrink);
+
+    serviceButtonsContainer.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-service-id]');
+        if (!button || !selectedRoomId) return;
+        const selectedService = services.find(item => item.id === button.dataset.serviceId);
+        if (!selectedService) return;
+        roomsData[selectedRoomId].services.push({ name: selectedService.name, price: selectedService.price });
         saveData('hotelRoomsData', roomsData);
         displayRoomDetails(selectedRoomId);
     });
-    addRedbullBtn.addEventListener('click', () => {
-        if (!selectedRoomId) return;
-        roomsData[selectedRoomId].services.push({ ...services.redbull });
-        saveData('hotelRoomsData', roomsData);
-        displayRoomDetails(selectedRoomId);
+
+    drinkPricingList.addEventListener('click', (event) => {
+        const removeBtn = event.target.closest('.remove-drink-btn');
+        if (!removeBtn) return;
+        const index = Number(removeBtn.dataset.index);
+        if (!Number.isInteger(index) || index < 0 || index >= services.length) return;
+        if (services.length <= 1) {
+            alert('Cần giữ ít nhất 1 đồ uống.');
+            return;
+        }
+        services = services.filter((_, i) => i !== index);
+        fillPricingForm();
     });
+
     exportBtn.addEventListener('click', () => {
         const allData = {
             roomsData: roomsData,

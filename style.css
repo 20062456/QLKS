@@ -71,8 +71,8 @@ button:hover:not(:disabled) { background-color: #0056b3; }
 button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 #checkout-btn { background-color: #dc3545; }
 #checkout-btn:hover:not(:disabled) { background-color: #c82333; }
-.services #service-buttons { display: flex; justify-content: space-between; }
-.services #service-buttons button { background-color: #28a745; width: calc(50% - 10px); }
+.services #service-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.services #service-buttons button { background-color: #28a745; width: calc(50% - 5px); }
 .services #service-buttons button:hover:not(:disabled) { background-color: #218838; }
 #toggle-ac-btn {
     width: 100%; margin-bottom: 10px; background-color: #17a2b8;
@@ -122,13 +122,15 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     margin-bottom: 10px;
 }
 .pricing-card label,
-.drink-pricing label {
+.drink-form label,
+.drink-pricing-item label {
     display: block;
     font-size: 14px;
     margin-top: 8px;
 }
 .pricing-card input,
-.drink-pricing input {
+.drink-form input,
+.drink-pricing-item input {
     width: 100%;
     box-sizing: border-box;
     margin-top: 4px;
@@ -136,8 +138,40 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     border: 1px solid #dddfe2;
     border-radius: 6px;
 }
-.drink-pricing {
+.drink-pricing-list {
     margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.drink-pricing-item {
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fafbfc;
+}
+.drink-pricing-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+.drink-pricing-item .remove-drink-btn {
+    background-color: #dc3545;
+    margin: 0;
+}
+.drink-pricing-item .remove-drink-btn:hover:not(:disabled) {
+    background-color: #c82333;
+}
+.drink-form {
+    margin-top: 10px;
+    border: 1px dashed #dddfe2;
+    padding: 10px;
+    border-radius: 8px;
+}
+.drink-form button {
+    margin-top: 10px;
+    width: 100%;
 }
 .pricing-actions {
     display: flex;
@@ -205,5 +239,8 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     }
     .pricing-actions {
         flex-direction: column;
+    }
+    .drink-pricing-row {
+        grid-template-columns: 1fr;
     }
 }
