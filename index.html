@@ -9,12 +9,69 @@
 </head>
 <body>
     <div class="app-container">
-        <div class="room-list-container">
-            <h2>Danh Sách Phòng</h2>
+        <div class="room-list-container column">
+            <div class="panel-header">
+                <div>
+                    <h2>Danh Sách Phòng</h2>
+                    <p class="subtitle">Chạm để xem nhanh</p>
+                </div>
+                <div id="room-overview" class="room-overview"></div>
+            </div>
             <div id="room-list"></div>
-            
-            <hr class="section-divider">
+        </div>
 
+        <div class="room-details-container column">
+            <div class="room-header">
+                <div>
+                    <h2 id="room-title">Chọn một phòng để xem chi tiết</h2>
+                    <div class="status-row">
+                        <span class="status-chip" id="room-status">-</span>
+                        <span class="status-chip" id="stay-type">-</span>
+                        <span class="status-chip" id="ac-status">-</span>
+                    </div>
+                </div>
+                <div class="timing-grid">
+                    <div class="info-card">
+                        <span>Giờ vào</span>
+                        <strong id="checkin-time">-</strong>
+                    </div>
+                    <div class="info-card">
+                        <span>Đang ở</span>
+                        <strong id="stay-duration">-</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="controls-row">
+                <button id="checkin-btn" disabled>Check-in</button>
+                <div class="checkout-block">
+                    <button id="checkout-btn" disabled>Check-out</button>
+                    <div class="checkout-amount">
+                        <span>Đến hiện tại</span>
+                        <strong id="checkout-total">0</strong> <small>VNĐ</small>
+                    </div>
+                </div>
+            </div>
+            <div class="services-billing-grid">
+                <div class="services">
+                    <h3>Thêm Dịch vụ & Tiện ích</h3>
+                    <button id="toggle-ac-btn" disabled>Bật Điều hòa</button>
+                    <div id="service-buttons"></div>
+                    <h4>Danh sách dịch vụ đã dùng:</h4>
+                    <ul id="service-list"></ul>
+                </div>
+                <div class="billing">
+                    <h3>Thanh Toán</h3>
+                    <div class="bill-breakdown">
+                        <div class="bill-row"><span>Tiền phòng</span><strong id="room-cost">0</strong></div>
+                        <div class="bill-row"><span>Dịch vụ</span><strong id="service-cost">0</strong></div>
+                        <div class="bill-row"><span>Làm tròn</span><strong id="rounding-adjustment">0</strong></div>
+                    </div>
+                    <p class="total-line"><strong>Tổng (đã làm tròn):</strong> <span id="total-bill">0</span> VNĐ</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar column">
             <div class="stats-container">
                 <h2>Báo Cáo & Thống Kê</h2>
                 
@@ -53,69 +110,45 @@
                     <input type="file" id="import-file-input" style="display: none;" accept=".json">
                 </div>
             </div>
-        </div>
 
-        <div class="room-details-container">
-            <h2 id="room-title">Chọn một phòng để xem chi tiết</h2>
-            <div id="details-content">
-                <p><strong>Trạng thái:</strong> <span id="room-status">-</span></p>
-                <p><strong>Sử dụng điều hòa:</strong> <span id="ac-status">-</span></p>
-                <p><strong>Giờ vào:</strong> <span id="checkin-time">-</span></p>
-                <p><strong>Hình thức thuê:</strong> <span id="stay-type">-</span></p>
-                <div class="controls">
-                    <button id="checkin-btn" disabled>Check-in</button>
-                    <button id="checkout-btn" disabled>Check-out</button>
-                </div>
-                <div class="services">
-                    <h3>Thêm Dịch vụ & Tiện ích</h3>
-                    <button id="toggle-ac-btn" disabled>Bật Điều hòa</button>
-                    <div id="service-buttons"></div>
-                    <h4>Danh sách dịch vụ đã dùng:</h4>
-                    <ul id="service-list"></ul>
-                </div>
-                <div class="billing">
-                    <h3>Thanh Toán</h3>
-                    <p><strong>Tổng tiền tạm tính:</strong> <span id="total-bill">0</span> VNĐ</p>
-                </div>
-                <div class="pricing-management">
-                    <h3>Cập nhật Bảng giá</h3>
-                    <div class="pricing-grid">
-                        <div class="pricing-card">
-                            <h4>Phòng có điều hòa</h4>
-                            <label>Giờ đầu</label>
-                            <input type="number" id="ac-hourly-first" min="0" step="1000">
-                            <label>Giờ tiếp theo</label>
-                            <input type="number" id="ac-hourly-next" min="0" step="1000">
-                            <label>Qua đêm</label>
-                            <input type="number" id="ac-overnight" min="0" step="1000">
-                            <label>Theo ngày</label>
-                            <input type="number" id="ac-daily" min="0" step="1000">
-                        </div>
-                        <div class="pricing-card">
-                            <h4>Phòng không điều hòa</h4>
-                            <label>Giờ đầu</label>
-                            <input type="number" id="noac-hourly-first" min="0" step="1000">
-                            <label>Giờ tiếp theo</label>
-                            <input type="number" id="noac-hourly-next" min="0" step="1000">
-                            <label>Qua đêm</label>
-                            <input type="number" id="noac-overnight" min="0" step="1000">
-                            <label>Theo ngày</label>
-                            <input type="number" id="noac-daily" min="0" step="1000">
-                        </div>
+            <div class="pricing-management">
+                <h3>Cập nhật Bảng giá</h3>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h4>Phòng có điều hòa</h4>
+                        <label>Giờ đầu</label>
+                        <input type="number" id="ac-hourly-first" min="0" step="1000">
+                        <label>Giờ tiếp theo</label>
+                        <input type="number" id="ac-hourly-next" min="0" step="1000">
+                        <label>Qua đêm</label>
+                        <input type="number" id="ac-overnight" min="0" step="1000">
+                        <label>Theo ngày</label>
+                        <input type="number" id="ac-daily" min="0" step="1000">
                     </div>
-                    <h4>Danh sách đồ uống</h4>
-                    <div id="drink-pricing-list" class="drink-pricing-list"></div>
-                    <div class="drink-form">
-                        <label for="new-drink-name">Tên đồ uống mới</label>
-                        <input type="text" id="new-drink-name" placeholder="Ví dụ: Sting">
-                        <label for="new-drink-price">Giá đồ uống mới</label>
-                        <input type="number" id="new-drink-price" min="0" step="1000" placeholder="Ví dụ: 15000">
-                        <button id="add-drink-btn">Thêm đồ uống</button>
+                    <div class="pricing-card">
+                        <h4>Phòng không điều hòa</h4>
+                        <label>Giờ đầu</label>
+                        <input type="number" id="noac-hourly-first" min="0" step="1000">
+                        <label>Giờ tiếp theo</label>
+                        <input type="number" id="noac-hourly-next" min="0" step="1000">
+                        <label>Qua đêm</label>
+                        <input type="number" id="noac-overnight" min="0" step="1000">
+                        <label>Theo ngày</label>
+                        <input type="number" id="noac-daily" min="0" step="1000">
                     </div>
-                    <div class="pricing-actions">
-                        <button id="save-pricing-btn">Lưu bảng giá</button>
-                        <button id="reset-pricing-btn">Khôi phục mặc định</button>
-                    </div>
+                </div>
+                <h4>Danh sách đồ uống</h4>
+                <div id="drink-pricing-list" class="drink-pricing-list"></div>
+                <div class="drink-form">
+                    <label for="new-drink-name">Tên đồ uống mới</label>
+                    <input type="text" id="new-drink-name" placeholder="Ví dụ: Sting">
+                    <label for="new-drink-price">Giá đồ uống mới</label>
+                    <input type="number" id="new-drink-price" min="0" step="1000" placeholder="Ví dụ: 15000">
+                    <button id="add-drink-btn">Thêm đồ uống</button>
+                </div>
+                <div class="pricing-actions">
+                    <button id="save-pricing-btn">Lưu bảng giá</button>
+                    <button id="reset-pricing-btn">Khôi phục mặc định</button>
                 </div>
             </div>
         </div>

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const MIN_DRINK_COUNT = 1;
     const MIN_DRINK_WARNING = `Cần giữ ít nhất ${MIN_DRINK_COUNT} đồ uống.`;
+    const ROUND_UNIT = 10000;
 
     function loadData(key, defaultValue) {
         const savedData = localStorage.getItem(key);
@@ -84,6 +85,31 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(item => item.name !== '');
         return normalized.length > 0 ? normalized : defaultList;
     }
+    function roundToNearestTenThousand(amount) {
+        const value = Math.max(0, Number(amount) || 0);
+        const remainder = value % ROUND_UNIT;
+        if (remainder === 0) return { rounded: value, adjustment: 0 };
+        if (remainder >= ROUND_UNIT / 2) {
+            const adjustment = ROUND_UNIT - remainder;
+            return { rounded: value + adjustment, adjustment };
+        }
+        return { rounded: value - remainder, adjustment: -remainder };
+    }
+    function formatCurrency(value) {
+        return Math.max(0, Number(value) || 0).toLocaleString('vi-VN');
+    }
+    function formatStayDuration(checkInTime) {
+        if (!checkInTime) return '-';
+        const now = new Date();
+        const diffMs = now - new Date(checkInTime);
+        if (!Number.isFinite(diffMs) || diffMs < 0) return '-';
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        if (hours === 0) return `${minutes} phút`;
+        if (minutes === 0) return `${hours} giờ`;
+        return `${hours} giờ ${minutes} phút`;
+    }
     function initializeRooms() {
         let rooms = loadData('hotelRoomsData', null);
         if (!rooms) {
@@ -108,12 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const acStatus = document.getElementById('ac-status');
     const checkinTimeEl = document.getElementById('checkin-time');
     const stayTypeEl = document.getElementById('stay-type');
+    const stayDurationEl = document.getElementById('stay-duration');
     const serviceList = document.getElementById('service-list');
     const totalBill = document.getElementById('total-bill');
     const checkinBtn = document.getElementById('checkin-btn');
     const checkoutBtn = document.getElementById('checkout-btn');
+    const checkoutTotalEl = document.getElementById('checkout-total');
     const serviceButtonsContainer = document.getElementById('service-buttons');
     const toggleAcBtn = document.getElementById('toggle-ac-btn'); // Nút mới
+    const roomCostEl = document.getElementById('room-cost');
+    const serviceCostEl = document.getElementById('service-cost');
+    const roundingAdjustmentEl = document.getElementById('rounding-adjustment');
+    const roomOverviewEl = document.getElementById('room-overview');
     const tabs = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
     const statsDateInput = document.getElementById('stats-date');
@@ -166,6 +198,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             roomListContainer.appendChild(roomDiv);
         });
+        renderRoomOverview();
+    }
+
+    function renderRoomOverview() {
+        if (!roomOverviewEl) return;
+        const allRooms = Object.values(roomsData || {});
+        const occupiedCount = allRooms.filter(room => room.status === 'occupied').length;
+        const availableCount = allRooms.length - occupiedCount;
+        roomOverviewEl.innerHTML = `
+            <span class="pill available">Trống: ${availableCount}</span>
+            <span class="pill occupied">Đang ở: ${occupiedCount}</span>
+        `;
     }
 
     function renderServiceButtons() {
@@ -191,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         roomStatus.textContent = room.status === 'available' ? 'Trống' : 'Đang có khách';
         acStatus.textContent = room.status === 'occupied' ? (room.isUsingAC ? 'Có' : 'Không') : '-';
         checkinTimeEl.textContent = room.checkInTime ? new Date(room.checkInTime).toLocaleString('vi-VN') : '-';
+        stayDurationEl.textContent = formatStayDuration(room.checkInTime);
         let stayTypeText = '-';
         if (room.stayType === 'hourly') stayTypeText = 'Theo Giờ';
         else if (room.stayType === 'overnight') stayTypeText = 'Qua Đêm';
@@ -214,14 +259,28 @@ document.addEventListener('DOMContentLoaded', () => {
         checkoutBtn.disabled = !isOccupied;
         serviceButtonsContainer.querySelectorAll('button').forEach(btn => { btn.disabled = !isOccupied; });
         toggleAcBtn.disabled = !isOccupied; // Cập nhật trạng thái nút mới
+        const bill = calculateBill(room);
+        const adjustmentText = bill.roundingAdjustment === 0
+            ? '0'
+            : `${bill.roundingAdjustment > 0 ? '+' : '-'}${formatCurrency(Math.abs(bill.roundingAdjustment))}`;
 
         if (isOccupied) {
-            totalBill.textContent = calculateBill(room).total.toLocaleString('vi-VN');
+            totalBill.textContent = formatCurrency(bill.total);
+            roomCostEl.textContent = formatCurrency(bill.roomCost);
+            serviceCostEl.textContent = formatCurrency(bill.serviceCost);
+            roundingAdjustmentEl.textContent = adjustmentText;
+            checkoutTotalEl.textContent = formatCurrency(bill.total);
+            stayDurationEl.textContent = formatStayDuration(room.checkInTime);
             // Cập nhật text và style cho nút điều hòa
             toggleAcBtn.textContent = room.isUsingAC ? 'Tắt Điều hòa' : 'Bật Điều hòa';
             room.isUsingAC ? toggleAcBtn.classList.add('active') : toggleAcBtn.classList.remove('active');
         } else {
             totalBill.textContent = '0';
+            roomCostEl.textContent = '0';
+            serviceCostEl.textContent = '0';
+            roundingAdjustmentEl.textContent = '0';
+            checkoutTotalEl.textContent = '0';
+            stayDurationEl.textContent = '-';
             toggleAcBtn.textContent = 'Bật Điều hòa';
             toggleAcBtn.classList.remove('active');
         }
@@ -267,8 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
             serviceCostDetails += `\n- ${serviceItem.name} (x${serviceItem.count}): ${(serviceItem.price * serviceItem.count).toLocaleString('vi-VN')} VNĐ`;
         });
         if (serviceCostDetails === '') serviceCostDetails = '\n- Không có';
-        const total = roomCost + serviceCost;
-        return { roomCost, serviceCost, total, roomCostDetails, serviceCostDetails };
+        const rawTotal = roomCost + serviceCost;
+        const rounding = roundToNearestTenThousand(rawTotal);
+        return {
+            roomCost,
+            serviceCost,
+            total: rounding.rounded,
+            roundingAdjustment: rounding.adjustment,
+            roomCostDetails,
+            serviceCostDetails
+        };
     }
     
     function handleCheckOut() {
@@ -285,15 +352,17 @@ document.addEventListener('DOMContentLoaded', () => {
 **Tiền phòng:**
 - ${bill.roomCostDetails}
 **Tiền dịch vụ:**${bill.serviceCostDetails}
+**Làm tròn:** ${bill.roundingAdjustment >= 0 ? '+' : ''}${formatCurrency(Math.abs(bill.roundingAdjustment))} VNĐ
 ------------------------------------
-**TỔNG CỘNG: ${bill.total.toLocaleString('vi-VN')} VNĐ**`;
+**TỔNG CỘNG (đã làm tròn): ${formatCurrency(bill.total)} VNĐ**`;
         if (confirm(billDetails + "\n\nBạn có muốn thanh toán và trả phòng không?")) {
             billHistory.push({
                 roomId: selectedRoomId,
                 checkInTime: checkInTime.toISOString(),
                 checkOutTime: checkOutTime.toISOString(),
                 stayType: room.stayType,
-                isUsingAC: room.isUsingAC, ...bill
+                isUsingAC: room.isUsingAC,
+                ...bill
             });
             saveData('hotelBillHistory', billHistory);
             room.status = 'available';
@@ -620,7 +689,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRooms();
         displayRoomDetails(selectedRoomId);
     });
-    
+    setInterval(() => {
+        if (!selectedRoomId) return;
+        const room = roomsData[selectedRoomId];
+        if (room?.status === 'occupied') {
+            displayRoomDetails(selectedRoomId);
+        }
+    }, 30000);
+
     function initialize() {
         const today = new Date();
         statsDateInput.value = today.toISOString().split('T')[0];

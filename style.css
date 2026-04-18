@@ -4,13 +4,42 @@ body {
     background-color: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21;
 }
 .app-container {
-    display: flex; max-width: 1400px; height: 95vh; margin: 0 auto;
-    background: #fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1); overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr 1.05fr;
+    gap: 16px;
+    max-width: 1600px;
+    height: 95vh;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    padding: 16px;
+    box-sizing: border-box;
+}
+.column {
+    background: #fff;
+    border: 1px solid #dddfe2;
+    border-radius: 10px;
+    padding: 16px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+.panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.subtitle {
+    color: #606770;
+    margin: 4px 0 0;
+    font-size: 14px;
 }
 
 /* --- Cột danh sách phòng & Thống kê --- */
 .room-list-container {
-    width: 45%; border-right: 1px solid #dddfe2; padding: 20px; overflow-y: auto;
+    width: 100%;
 }
 #room-list {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;
@@ -28,6 +57,30 @@ body {
     position: absolute; top: 5px; right: 5px; font-size: 14px;
     background-color: #fff; border-radius: 50%; width: 22px; height: 22px;
     line-height: 22px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.room-overview {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.room-overview .pill {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: #f0f2f5;
+    color: #1c1e21;
+    border: 1px solid #e4e6eb;
+}
+.room-overview .pill.available {
+    background: #e7f3ff;
+    color: #0056b3;
+    border-color: #cfe2ff;
+}
+.room-overview .pill.occupied {
+    background: #fff4e5;
+    color: #a05e03;
+    border-color: #ffe0b2;
 }
 
 /* --- Khu vực thống kê NÂNG CAO --- */
@@ -57,9 +110,46 @@ body {
 #import-data-btn { background-color: #6c757d; }
 
 /* --- Cột chi tiết --- */
-.room-details-container { width: 55%; padding: 20px 30px; overflow-y: auto; }
-.room-details-container h2, .room-details-container h3 {
-    border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-bottom: 15px;
+.room-details-container { width: 100%; }
+.room-details-container h2 {
+    margin: 0 0 8px;
+}
+.room-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}
+.status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.status-chip {
+    background: #f0f2f5;
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-size: 13px;
+    border: 1px solid #e4e6eb;
+}
+.timing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 10px;
+}
+.info-card {
+    background: #f7f8fa;
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.info-card strong {
+    font-size: 16px;
 }
 p { line-height: 1.8; }
 button {
@@ -74,6 +164,9 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 .services #service-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 .services #service-buttons button { background-color: #28a745; width: calc(50% - 5px); }
 .services #service-buttons button:hover:not(:disabled) { background-color: #218838; }
+#service-buttons button:disabled {
+    background-color: #c6e6d0;
+}
 #toggle-ac-btn {
     width: 100%; margin-bottom: 10px; background-color: #17a2b8;
 }
@@ -82,6 +175,66 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
 #toggle-ac-btn.active:hover:not(:disabled) { background-color: #e36a02; }
 #service-list { list-style-type: decimal; padding-left: 20px; }
 #service-list li { background: #f0f2f5; padding: 8px 12px; margin-top: 5px; border-radius: 4px; }
+.controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+.checkout-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.checkout-amount {
+    background: #fff4e5;
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.4;
+    min-width: 170px;
+}
+.checkout-amount strong {
+    font-size: 16px;
+}
+.services-billing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.billing {
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fafbfc;
+}
+.bill-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.bill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #e4e6eb;
+}
+.bill-row:last-child { border-bottom: none; }
+.total-line {
+    margin-top: 10px;
+    font-size: 16px;
+}
+.sidebar h2, .pricing-management h3 {
+    margin-top: 0;
+}
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
 /* --- Modal Styles --- */
 .modal-overlay {
@@ -198,13 +351,15 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     }
 
     .app-container {
-        flex-direction: column; /* Xếp 2 cột chồng lên nhau */
+        grid-template-columns: 1fr; /* Xếp cột chồng lên nhau */
         height: auto; /* Chiều cao tự động để có thể cuộn */
         overflow-y: auto;
+        padding: 10px;
     }
 
     .room-list-container,
-    .room-details-container {
+    .room-details-container,
+    .sidebar {
         width: 100%; /* Mỗi cột chiếm toàn bộ chiều rộng */
         box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
         border-right: none; /* Bỏ đường kẻ phải */
@@ -242,5 +397,18 @@ button:disabled { background-color: #ccd0d5; cursor: not-allowed; }
     }
     .drink-pricing-row {
         grid-template-columns: 1fr;
+    }
+    .services-billing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1200px) {
+    .app-container {
+        grid-template-columns: 1fr 1fr;
+        height: auto;
+    }
+    .sidebar {
+        grid-column: span 2;
     }
 }
