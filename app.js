@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'water', name: 'Nước suối', price: 10000 },
         { id: 'redbull', name: 'Redbull', price: 20000 }
     ];
+    const MIN_SERVICE_COUNT = 1;
 
     function loadData(key, defaultValue) {
         const savedData = localStorage.getItem(key);
@@ -26,12 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeof service?.name === 'string' && service.name.trim() !== '' && Number.isFinite(price) && price >= 0;
     }
     function makeServiceId(name, index = 0) {
-        const base = (name || 'drink')
+        const normalizedName = (name ?? '')
             .toString()
             .trim()
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '') || 'drink';
+            .replace(/^-+|-+$/g, '');
+        const base = normalizedName || 'drink';
         return index > 0 ? `${base}-${index}` : base;
     }
     function normalizePricing(rawPricing) {
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalized = sourceList
             .map((item, index) => {
                 const rawName = typeof item?.name === 'string' ? item.name.trim() : '';
-                const name = rawName || `Đồ uống ${index + 1}`;
+                const name = rawName || 'Đồ uống';
                 let id = (typeof item?.id === 'string' ? item.id.trim() : '') || makeServiceId(name);
                 let suffix = 1;
                 while (usedIds.has(id)) {
@@ -558,8 +560,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!removeBtn) return;
         const index = Number(removeBtn.dataset.index);
         if (!Number.isInteger(index) || index < 0 || index >= services.length) return;
-        if (services.length <= 1) {
-            alert('Cần giữ ít nhất 1 đồ uống.');
+        if (services.length <= MIN_SERVICE_COUNT) {
+            alert(`Cần giữ ít nhất ${MIN_SERVICE_COUNT} đồ uống.`);
             return;
         }
         services = services.filter((_, i) => i !== index);
