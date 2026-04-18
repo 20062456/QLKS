@@ -209,11 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
             roomCost = roomPriceConfig.daily;
             roomCostDetails = `Theo ngày: ${roomCost.toLocaleString('vi-VN')} VNĐ`;
         }
-        const serviceCost = (room.services || []).reduce((total, service) => total + toNonNegativeNumber(service.price), 0);
+        const validServices = (room.services || []).filter(service => {
+            const price = Number(service?.price);
+            return typeof service?.name === 'string' && service.name.trim() !== '' && Number.isFinite(price) && price >= 0;
+        });
+        const serviceCost = validServices.reduce((total, service) => total + Number(service.price), 0);
         const serviceCounts = {};
-        (room.services || []).forEach(service => {
-            const name = service.name || 'Dịch vụ';
-            const price = toNonNegativeNumber(service.price);
+        validServices.forEach(service => {
+            const name = service.name;
+            const price = Number(service.price);
             const serviceKey = `${name}-${price}`;
             if (!serviceCounts[serviceKey]) {
                 serviceCounts[serviceKey] = { name, price, count: 0 };
