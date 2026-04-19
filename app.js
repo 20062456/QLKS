@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_DRINK_COUNT = 1;
     const MIN_DRINK_WARNING = `Cần giữ ít nhất ${MIN_DRINK_COUNT} đồ uống.`;
     const ROUND_UNIT = 10000;
+    const AUTO_BACKUP_KEY = 'hotelAutoBackupData';
+    const AUTO_BACKUP_INTERVAL_MS = 60 * 60 * 1000;
 
     function loadData(key, defaultValue) {
         const savedData = localStorage.getItem(key);
@@ -98,10 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatCurrency(value) {
         return Math.max(0, Number(value) || 0).toLocaleString('vi-VN');
     }
-    function formatStayDuration(checkInTime) {
+    function formatStayDuration(checkInTime, referenceTime = new Date()) {
         if (!checkInTime) return '-';
-        const now = new Date();
-        const diffMs = now - new Date(checkInTime);
+        const start = new Date(checkInTime);
+        const end = new Date(referenceTime);
+        const diffMs = end - start;
         if (!Number.isFinite(diffMs) || diffMs < 0) return '-';
         const totalMinutes = Math.floor(diffMs / 60000);
         const hours = Math.floor(totalMinutes / 60);
@@ -109,6 +112,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hours === 0) return `${minutes} phút`;
         if (minutes === 0) return `${hours} giờ`;
         return `${hours} giờ ${minutes} phút`;
+    }
+    function toDateTimeLocalValue(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (!Number.isFinite(date.getTime())) return '';
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+    }
+    function getBillingReferenceTime(room) {
+        if (room?.customCheckoutTime) {
+            const custom = new Date(room.customCheckoutTime);
+            if (Number.isFinite(custom.getTime())) return custom;
+        }
+        return new Date();
     }
     function initializeRooms() {
         let rooms = loadData('hotelRoomsData', null);
@@ -177,6 +194,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const addDrinkBtn = document.getElementById('add-drink-btn');
     const savePricingBtn = document.getElementById('save-pricing-btn');
     const resetPricingBtn = document.getElementById('reset-pricing-btn');
+    const editTimesBtn = document.getElementById('edit-times-btn');
+    const editTimeModal = document.getElementById('edit-time-modal');
+    const editTimeRoomId = document.getElementById('edit-time-room-id');
+    const editCheckinInput = document.getElementById('edit-checkin-input');
+    const editCheckoutInput = document.getElementById('edit-checkout-input');
+    const saveEditTimeBtn = document.getElementById('save-edit-time-btn');
+    const cancelEditTimeBtn = document.getElementById('cancel-edit-time-btn');
+    const statsVisibilityCheckbox = document.getElementById('stats-visibility-checkbox');
+    const statsBody = document.getElementById('stats-body');
+    const autoBackupStatus = document.getElementById('auto-backup-status');
 
     function renderRooms() {
         roomListContainer.innerHTML = '';
@@ -233,9 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newSelected) newSelected.classList.add('selected');
         roomTitle.textContent = `Chi tiết Phòng ${roomId}`;
         roomStatus.textContent = room.status === 'available' ? 'Trống' : 'Đang có khách';
-        acStatus.textContent = room.status === 'occupied' ? (room.isUsingAC ? 'Có' : 'Không') : '-';
+        const referenceTime = getBillingReferenceTime(room);
+        acStatus.textContent = room.status === 'occupied'
+            ? `Điều hòa: ${room.isUsingAC ? 'Có' : 'Không'}`
+            : 'Điều hòa: -';
         checkinTimeEl.textContent = room.checkInTime ? new Date(room.checkInTime).toLocaleString('vi-VN') : '-';
-        stayDurationEl.textContent = formatStayDuration(room.checkInTime);
+        stayDurationEl.textContent = formatStayDuration(room.checkInTime, referenceTime);
+        editTimesBtn.disabled = room.status !== 'occupied';
         let stayTypeText = '-';
         if (room.stayType === 'hourly') stayTypeText = 'Theo Giờ';
         else if (room.stayType === 'overnight') stayTypeText = 'Qua Đêm';
@@ -249,17 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 serviceList.appendChild(li);
             });
         }
-        updateButtonsAndBill(room);
+        updateButtonsAndBill(room, referenceTime);
     }
 
     // *** HÀM ĐƯỢC NÂNG CẤP ***
-    function updateButtonsAndBill(room) {
+    function updateButtonsAndBill(room, referenceTime = getBillingReferenceTime(room)) {
         const isOccupied = room.status === 'occupied';
         checkinBtn.disabled = isOccupied;
         checkoutBtn.disabled = !isOccupied;
         serviceButtonsContainer.querySelectorAll('button').forEach(btn => { btn.disabled = !isOccupied; });
         toggleAcBtn.disabled = !isOccupied; // Cập nhật trạng thái nút mới
-        const bill = calculateBill(room);
+        const bill = calculateBill(room, referenceTime);
         const adjustmentText = bill.roundingAdjustment === 0
             ? '0'
             : `${bill.roundingAdjustment > 0 ? '+' : '-'}${formatCurrency(Math.abs(bill.roundingAdjustment))}`;
@@ -270,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             serviceCostEl.textContent = formatCurrency(bill.serviceCost);
             roundingAdjustmentEl.textContent = adjustmentText;
             checkoutTotalEl.textContent = formatCurrency(bill.total);
-            stayDurationEl.textContent = formatStayDuration(room.checkInTime);
+            stayDurationEl.textContent = formatStayDuration(room.checkInTime, referenceTime);
             // Cập nhật text và style cho nút điều hòa
             toggleAcBtn.textContent = room.isUsingAC ? 'Tắt Điều hòa' : 'Bật Điều hòa';
             room.isUsingAC ? toggleAcBtn.classList.add('active') : toggleAcBtn.classList.remove('active');
@@ -286,15 +317,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function calculateBill(room) {
+    function calculateBill(room, referenceTime = new Date()) {
         if (!room.checkInTime) return { total: 0, roomCost: 0, serviceCost: 0, roomCostDetails: '', serviceCostDetails: '' };
         const priceTier = room.isUsingAC ? 'ac' : 'no_ac';
         const roomPriceConfig = pricing[priceTier];
         let roomCost = 0;
         let roomCostDetails = '';
         const checkIn = new Date(room.checkInTime);
+        const effectiveEnd = new Date(referenceTime);
+        if (!Number.isFinite(checkIn.getTime()) || !Number.isFinite(effectiveEnd.getTime()) || effectiveEnd < checkIn) {
+            return { total: 0, roomCost: 0, serviceCost: 0, roomCostDetails: '', serviceCostDetails: '' };
+        }
         if (room.stayType === 'hourly') {
-            const hoursStayed = Math.max(1, Math.ceil((new Date() - checkIn) / 3600000));
+            const hoursStayed = Math.max(1, Math.ceil((effectiveEnd - checkIn) / 3600000));
             if (hoursStayed <= 1) {
                 roomCost = roomPriceConfig.hourly.firstHour;
                 roomCostDetails = `Theo giờ (1 giờ đầu): ${roomCost.toLocaleString('vi-VN')} VNĐ`;
@@ -341,9 +376,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCheckOut() {
         if (!selectedRoomId) return;
         const room = roomsData[selectedRoomId];
-        const bill = calculateBill(room);
+        const checkOutTime = getBillingReferenceTime(room);
+        const bill = calculateBill(room, checkOutTime);
         const checkInTime = new Date(room.checkInTime);
-        const checkOutTime = new Date();
         const billDetails = `
 --- HÓA ĐƠN PHÒNG ${selectedRoomId} ---
 **Thời gian:**
@@ -370,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
             room.stayType = null;
             room.isUsingAC = false;
             room.services = [];
+            room.customCheckoutTime = null;
             saveData('hotelRoomsData', roomsData);
             renderRooms();
             displayRoomDetails(selectedRoomId);
@@ -385,6 +421,54 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData('hotelRoomsData', roomsData); // Lưu lại
         displayRoomDetails(selectedRoomId); // Cập nhật chi tiết (bao gồm cả tiền)
         renderRooms(); // Cập nhật danh sách phòng (để hiện/ẩn icon)
+    }
+    function openEditTimeModal() {
+        if (!selectedRoomId) return;
+        const room = roomsData[selectedRoomId];
+        if (!room || room.status !== 'occupied') return;
+        editTimeRoomId.textContent = selectedRoomId;
+        editCheckinInput.value = toDateTimeLocalValue(room.checkInTime) || toDateTimeLocalValue(new Date());
+        editCheckoutInput.value = toDateTimeLocalValue(room.customCheckoutTime);
+        editTimeModal.style.display = 'flex';
+    }
+    function closeEditTimeModal() {
+        editTimeModal.style.display = 'none';
+    }
+    function handleSaveEditedTimes() {
+        if (!selectedRoomId) return;
+        const room = roomsData[selectedRoomId];
+        if (!room) return;
+        const checkinValue = editCheckinInput.value;
+        if (!checkinValue) {
+            alert('Vui lòng nhập giờ vào hợp lệ.');
+            return;
+        }
+        const newCheckIn = new Date(checkinValue);
+        if (!Number.isFinite(newCheckIn.getTime())) {
+            alert('Giờ vào không hợp lệ.');
+            return;
+        }
+        let newCheckOut = null;
+        if (editCheckoutInput.value) {
+            newCheckOut = new Date(editCheckoutInput.value);
+            if (!Number.isFinite(newCheckOut.getTime())) {
+                alert('Giờ ra không hợp lệ.');
+                return;
+            }
+            if (newCheckOut < newCheckIn) {
+                alert('Giờ ra phải sau giờ vào.');
+                return;
+            }
+        }
+        room.checkInTime = newCheckIn.toISOString();
+        if (newCheckOut) {
+            room.customCheckoutTime = newCheckOut.toISOString();
+        } else {
+            delete room.customCheckoutTime;
+        }
+        saveData('hotelRoomsData', roomsData);
+        closeEditTimeModal();
+        displayRoomDetails(selectedRoomId);
     }
 
     function fillPricingForm() {
@@ -516,9 +600,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedRoomId) displayRoomDetails(selectedRoomId);
         alert('Đã khôi phục bảng giá mặc định.');
     }
+    function setStatsVisibility(isVisible) {
+        if (!statsBody || !statsVisibilityCheckbox) return;
+        statsBody.classList.toggle('hidden', !isVisible);
+        statsVisibilityCheckbox.checked = !!isVisible;
+        saveData('statsVisibility', !!isVisible);
+        if (isVisible) updateStats();
+    }
+    function updateAutoBackupStatusDisplay(timestamp) {
+        if (!autoBackupStatus) return;
+        if (!timestamp) {
+            autoBackupStatus.textContent = 'Tự động sao lưu mỗi giờ.';
+            return;
+        }
+        const readable = new Date(timestamp);
+        autoBackupStatus.textContent = `Tự động sao lưu mỗi giờ. Lần cuối: ${Number.isFinite(readable.getTime()) ? readable.toLocaleString('vi-VN') : '-'}`;
+    }
+    function performAutoBackup() {
+        const snapshot = {
+            timestamp: new Date().toISOString(),
+            data: {
+                roomsData,
+                billHistory,
+                pricing,
+                services
+            }
+        };
+        saveData(AUTO_BACKUP_KEY, snapshot);
+        updateAutoBackupStatusDisplay(snapshot.timestamp);
+    }
+    function startAutoBackup() {
+        const previous = loadData(AUTO_BACKUP_KEY, null);
+        if (previous?.timestamp) updateAutoBackupStatusDisplay(previous.timestamp);
+        performAutoBackup();
+        setInterval(performAutoBackup, AUTO_BACKUP_INTERVAL_MS);
+    }
 
     function updateStats() {
         // ... (hàm này giữ nguyên)
+        if (statsVisibilityCheckbox && !statsVisibilityCheckbox.checked) return;
         const activeTab = document.querySelector('.tab-link.active').dataset.tab;
         let filteredBills = [];
         let labels = [];
@@ -607,8 +727,12 @@ document.addEventListener('DOMContentLoaded', () => {
         checkinModal.style.display = 'flex';
     });
     checkoutBtn.addEventListener('click', handleCheckOut);
+    editTimesBtn.addEventListener('click', openEditTimeModal);
+    saveEditTimeBtn.addEventListener('click', handleSaveEditedTimes);
+    cancelEditTimeBtn.addEventListener('click', closeEditTimeModal);
     toggleAcBtn.addEventListener('click', handleToggleAC);
     [statsDateInput, statsMonthInput, statsYearInput].forEach(input => input.addEventListener('change', updateStats));
+    if (statsVisibilityCheckbox) statsVisibilityCheckbox.addEventListener('change', () => setStatsVisibility(statsVisibilityCheckbox.checked));
     importBtn.addEventListener('click', () => importFileInput.click());
     cancelCheckinBtn.addEventListener('click', () => checkinModal.style.display = 'none');
     savePricingBtn.addEventListener('click', handleSavePricing);
@@ -684,6 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
         room.checkInTime = new Date().toISOString();
         room.stayType = stayTypeSelect.value;
         room.isUsingAC = acCheckbox.checked;
+        room.customCheckoutTime = null;
         saveData('hotelRoomsData', roomsData);
         checkinModal.style.display = 'none';
         renderRooms();
@@ -702,9 +827,11 @@ document.addEventListener('DOMContentLoaded', () => {
         statsDateInput.value = today.toISOString().split('T')[0];
         statsMonthInput.value = today.toISOString().slice(0, 7);
         statsYearInput.value = today.getFullYear();
+        setStatsVisibility(loadData('statsVisibility', true));
         fillPricingForm();
         renderRooms();
         updateStats();
+        startAutoBackup();
     }
     initialize();
 });

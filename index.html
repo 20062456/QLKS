@@ -50,6 +50,7 @@
                         <strong id="checkout-total">0</strong> <small>VNĐ</small>
                     </div>
                 </div>
+                <button id="edit-times-btn" disabled>Sửa thời gian</button>
             </div>
             <div class="services-billing-grid">
                 <div class="services">
@@ -73,41 +74,49 @@
 
         <div class="sidebar column">
             <div class="stats-container">
-                <h2>Báo Cáo & Thống Kê</h2>
-                
-                <div class="tabs">
-                    <button class="tab-link active" data-tab="daily">Theo Ngày</button>
-                    <button class="tab-link" data-tab="monthly">Theo Tháng</button>
-                    <button class="tab-link" data-tab="yearly">Theo Năm</button>
+                <div class="stats-header">
+                    <h2>Báo Cáo & Thống Kê</h2>
+                    <label class="stats-toggle">
+                        <input type="checkbox" id="stats-visibility-checkbox" checked>
+                        Hiển thị
+                    </label>
                 </div>
+                <div id="stats-body" class="stats-body">
+                    <div class="tabs">
+                        <button class="tab-link active" data-tab="daily">Theo Ngày</button>
+                        <button class="tab-link" data-tab="monthly">Theo Tháng</button>
+                        <button class="tab-link" data-tab="yearly">Theo Năm</button>
+                    </div>
 
-                <div id="daily" class="tab-content active">
-                    <label for="stats-date">Chọn ngày:</label>
-                    <input type="date" id="stats-date">
-                </div>
-                <div id="monthly" class="tab-content">
-                    <label for="stats-month">Chọn tháng:</label>
-                    <input type="month" id="stats-month">
-                </div>
-                <div id="yearly" class="tab-content">
-                    <label for="stats-year">Chọn năm:</label>
-                    <input type="number" id="stats-year" placeholder="Nhập năm (ví dụ: 2024)">
-                </div>
-                
-                <div class="stats-results">
-                    <p><strong>Tổng doanh thu:</strong> <span id="total-revenue">0</span> VNĐ</p>
-                    <p><strong>Lượt thuê theo ngày:</strong> <span id="daily-checkouts">0</span></p>
-                    <p><strong>Lượt thuê qua đêm:</strong> <span id="overnight-checkouts">0</span></p>
-                </div>
+                    <div id="daily" class="tab-content active">
+                        <label for="stats-date">Chọn ngày:</label>
+                        <input type="date" id="stats-date">
+                    </div>
+                    <div id="monthly" class="tab-content">
+                        <label for="stats-month">Chọn tháng:</label>
+                        <input type="month" id="stats-month">
+                    </div>
+                    <div id="yearly" class="tab-content">
+                        <label for="stats-year">Chọn năm:</label>
+                        <input type="number" id="stats-year" placeholder="Nhập năm (ví dụ: 2024)">
+                    </div>
+                    
+                    <div class="stats-results">
+                        <p><strong>Tổng doanh thu:</strong> <span id="total-revenue">0</span> VNĐ</p>
+                        <p><strong>Lượt thuê theo ngày:</strong> <span id="daily-checkouts">0</span></p>
+                        <p><strong>Lượt thuê qua đêm:</strong> <span id="overnight-checkouts">0</span></p>
+                    </div>
 
-                <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
 
-                <div class="backup-restore">
-                    <button id="export-data-btn">💾 Sao lưu Dữ liệu</button>
-                    <button id="import-data-btn">📂 Phục hồi Dữ liệu</button>
-                    <input type="file" id="import-file-input" style="display: none;" accept=".json">
+                    <div class="backup-restore">
+                        <button id="export-data-btn">💾 Sao lưu Dữ liệu</button>
+                        <button id="import-data-btn">📂 Phục hồi Dữ liệu</button>
+                        <input type="file" id="import-file-input" style="display: none;" accept=".json">
+                        <p id="auto-backup-status" class="backup-note">Tự động sao lưu mỗi giờ.</p>
+                    </div>
                 </div>
             </div>
 
@@ -170,6 +179,21 @@
             <div class="modal-buttons">
                 <button id="confirm-checkin-btn">Xác nhận Check-in</button>
                 <button id="cancel-checkin-btn">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-time-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Chỉnh sửa thời gian Phòng <span id="edit-time-room-id"></span></h3>
+            <label for="edit-checkin-input">Giờ vào</label>
+            <input type="datetime-local" id="edit-checkin-input">
+            <label for="edit-checkout-input">Giờ ra (tùy chọn)</label>
+            <input type="datetime-local" id="edit-checkout-input">
+            <p class="modal-hint">Để trống giờ ra nếu muốn tính theo thời điểm hiện tại.</p>
+            <div class="modal-buttons">
+                <button id="save-edit-time-btn">Lưu thay đổi</button>
+                <button id="cancel-edit-time-btn">Hủy</button>
             </div>
         </div>
     </div>
